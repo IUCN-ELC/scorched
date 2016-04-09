@@ -53,6 +53,30 @@ class SolrFacetCounts(object):
         return SolrFacetCounts(**facet_counts)
 
 
+class SolrStats(object):
+    members = {
+        "stats_fields": {},
+    }
+
+    def __init__(self, **kwargs):
+        for member, default in self.members.items():
+            setattr(self, member, kwargs.get(member, default))
+
+    def __repr__(self):
+        memberdata = ["{}={}".format(member, repr(getattr(self, member)))
+                      for member in self.members.keys()]
+        return "{}({})".format(self.__class__.__name__,
+                               ", ".join(memberdata))
+
+    @classmethod
+    def from_json(cls, response):
+        try:
+            stats = response['stats']
+        except KeyError:
+            return cls()
+        return cls(**stats)
+
+
 class SolrUpdateResponse(object):
     @classmethod
     def from_json(cls, jsonmsg):
@@ -86,6 +110,7 @@ class SolrResponse(collections.Sequence):
         # if doc.get('match'):
         #    self.result = SolrResult.from_json(doc['match'], datefields)
         self.facet_counts = SolrFacetCounts.from_json(doc)
+        self.stats = SolrStats.from_json(doc)
         self.highlighting = doc.get("highlighting", {})
         self.spellcheck = doc.get("spellcheck", {})
         self.groups = doc.get('grouped', {})

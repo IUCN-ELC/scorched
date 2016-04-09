@@ -383,7 +383,7 @@ class BaseSearch(object):
                       'faceter', 'grouper', 'sorter', 'facet_querier',
                       'debugger', 'spellchecker', 'requesthandler',
                       'field_limiter', 'parser', 'pivoter', 'facet_ranger',
-                      'term_vectors')
+                      'statser', 'term_vectors')
 
     def _init_common_modules(self):
         self.query_obj = LuceneQuery(u'q')
@@ -393,6 +393,7 @@ class BaseSearch(object):
         self.highlighter = HighlightOptions()
         self.postings_highlighter = PostingsHighlightOptions()
         self.faceter = FacetOptions()
+        self.statser = StatsOptions()
         self.pivoter = FacetPivotOptions()
         self.grouper = GroupOptions()
         self.sorter = SortOptions()
@@ -454,6 +455,11 @@ class BaseSearch(object):
     def facet_range(self, fields, **kwargs):
         newself = self.clone()
         newself.facet_ranger.update(fields, **kwargs)
+        return newself
+
+    def stats_on(self, fields, **kwargs):
+        newself = self.clone()
+        newself.statser.update(fields, **kwargs)
         return newself
 
     def pivot_by(self, fields, **kwargs):
@@ -788,6 +794,21 @@ class FacetOptions(Options):
     def field_names_in_opts(self, opts, fields):
         if fields:
             opts["facet.field"] = sorted(fields)
+
+
+class StatsOptions(Options):
+    option_name = "stats"
+    opts = {}
+
+    def __init__(self, original=None):
+        if original is None:
+            self.fields = collections.defaultdict(dict)
+        else:
+            self.fields = copy.copy(original.fields)
+
+    def field_names_in_opts(self, opts, fields):
+        if fields:
+            opts["stats.field"] = sorted(fields)
 
 
 class FacetRangeOptions(Options):
